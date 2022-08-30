@@ -61,21 +61,14 @@ class ListClientsCommand(Command):
 class CreateQRCommand(Command):
     def execute(self, data:int):
       
-       input_URL = db.select_url_by_id(data)
-       #input_name = db.select_name_by_id(data)
-       #print(input_name)
-       
-       def get_cursor():
-            connection = sqlite3.connect("clients.db")
-            return connection.cursor
-
-       def select_name_by_id(cursor:sqlite3.Cursor, id:int):
-            sql_query = "SELECT 'client_name' FROM 'clients' WHERE 'id' =?"
-            print(sql_query)
-            return sql_query
-
-       cursor = get_cursor()
-       input_name = select_name_by_id(cursor,data)
+            
+       sqliteConnection = sqlite3.connect('clients.db')
+       cursor = sqliteConnection.cursor()
+       sqlite_select_Query = f"select url from clients where id={data}"
+       cursor.execute(sqlite_select_Query)
+       record_url = cursor.fetchall()
+       print("URL is : ", record_url)
+       cursor.close()
 
        qr = qrcode.QRCode(
             version=1,
@@ -84,11 +77,11 @@ class CreateQRCommand(Command):
             border=4,
         )
 
-       qr.add_data(input_URL)
+       qr.add_data(record_url)
        qr.make(fit=True)
 
        img = qr.make_image(fill_color="red", back_color="white")
-       img.save(f"./exports/{input_name}.png")
+       img.save(f"./exports/qr.png")
 
        #print(qr.data_list)  
 
@@ -132,7 +125,7 @@ class ExportToExcelCommand(Command):
             for column_index, cell_value in enumerate(row):
                 sheet.cell(row=row_index + 1, column=column_index + 1, value=cell_value)
 
-        workbook.save(f"./exports/{data}")
+        workbook.save(f"./exports/{data}.xlsx")
         return f"Exported to file {data}"
 
 
