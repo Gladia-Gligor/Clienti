@@ -2,7 +2,7 @@ import sqlite3
 import qrcode
 import sys
 import uuid
-
+import os
 from tkinter import *
 
 from datetime import datetime
@@ -66,8 +66,8 @@ class CreateQRCommand(Command):
        cursor = sqliteConnection.cursor()
        sqlite_select_Query = f"select url from clients where id={data}"
        cursor.execute(sqlite_select_Query)
-       record_url = cursor.fetchall()
-       print("URL is : ", record_url)
+       record_url = cursor.fetchone()
+       print("URL is : ", record_url[0])
        cursor.close()
 
        qr = qrcode.QRCode(
@@ -77,9 +77,10 @@ class CreateQRCommand(Command):
             border=4,
         )
 
-       qr.add_data(record_url)
+       qr.add_data(record_url[0])
        qr.make(fit=True)
-
+       if not os.path.exists("exports"):
+            os.mkdir("exports")
        img = qr.make_image(fill_color="red", back_color="white")
        img.save(f"./exports/qr.png")
 
@@ -124,7 +125,8 @@ class ExportToExcelCommand(Command):
             sheet.insert_rows(idx=row_index + 1)
             for column_index, cell_value in enumerate(row):
                 sheet.cell(row=row_index + 1, column=column_index + 1, value=cell_value)
-
+        if not os.path.exists("exports"):
+            os.mkdir("exports")
         workbook.save(f"./exports/{data}.xlsx")
         return f"Exported to file {data}"
 
